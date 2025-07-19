@@ -1,188 +1,184 @@
-// File: com/gqt/cms/gui/ProfessorWindow.java
 package com.gqt.cms.gui;
 
-import com.gqt.cms.datamanagement.ProfessorData;
+import com.gqt.cms.datamanagement.CourseDAO;
+import com.gqt.cms.datamanagement.ProfessorDAO;
+import com.gqt.cms.users.Professor;
+import com.gqt.cms.utils.DialogUtil;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.List;
 
 public class ProfessorWindow extends JFrame {
 
-    private ProfessorData professorData = new ProfessorData();
+	public ProfessorWindow() {
+		UIManager.put("OptionPane.background", new Color(255, 248, 240));
+		UIManager.put("Panel.background", new Color(255, 248, 240));
+		UIManager.put("Button.background", new Color(210, 105, 30));
+		UIManager.put("Button.foreground", Color.WHITE);
+		UIManager.put("OptionPane.messageFont", new Font("Segoe UI", Font.PLAIN, 14));
+		UIManager.put("OptionPane.buttonFont", new Font("Segoe UI", Font.PLAIN, 13));
 
-    public ProfessorWindow() {
-    	UIManager.put("OptionPane.background", new Color(240, 248, 255));
-        UIManager.put("Panel.background", new Color(240, 248, 255));
-        UIManager.put("Button.background", new Color(70, 130, 180));
-        UIManager.put("Button.foreground", Color.WHITE);
-        UIManager.put("OptionPane.messageFont", new Font("Segoe UI", Font.PLAIN, 14));
-        UIManager.put("OptionPane.buttonFont", new Font("Segoe UI", Font.PLAIN, 13));
-    	
-        setTitle("📘 Professor Panel - GQT CMS");
-        setSize(500, 400);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLocationRelativeTo(null);
-        setResizable(false);
+		setTitle("👨‍🏫 Professor Panel - GQT CMS");
+		setSize(500, 400);
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setLocationRelativeTo(null);
+		setResizable(false);
 
-        // === Background Panel ===
-        JPanel background = new JPanel(new BorderLayout());
-        background.setBackground(new Color(240, 248, 255)); // Light bluish
+		JPanel background = new JPanel(new BorderLayout());
+		background.setBackground(new Color(255, 248, 240));
 
-        // === Heading ===
-        JLabel heading = new JLabel("Professor Dashboard", JLabel.CENTER);
-        heading.setFont(new Font("Segoe UI", Font.BOLD, 22));
-        heading.setForeground(new Color(25, 60, 120));
-        heading.setBorder(BorderFactory.createEmptyBorder(20, 0, 10, 0));
-        background.add(heading, BorderLayout.NORTH);
+		JLabel heading = new JLabel("Professor Dashboard", JLabel.CENTER);
+		heading.setFont(new Font("Segoe UI", Font.BOLD, 22));
+		heading.setForeground(new Color(139, 69, 19));
+		heading.setBorder(BorderFactory.createEmptyBorder(20, 0, 10, 0));
+		background.add(heading, BorderLayout.NORTH);
 
-        // === Button Panel ===
-        JPanel btnPanel = new JPanel(new GridLayout(4, 1, 15, 15));
-        btnPanel.setBackground(background.getBackground());
-        btnPanel.setBorder(BorderFactory.createEmptyBorder(20, 100, 30, 100));
+		JPanel btnPanel = new JPanel(new GridLayout(4, 1, 15, 15));
+		btnPanel.setBackground(background.getBackground());
+		btnPanel.setBorder(BorderFactory.createEmptyBorder(20, 100, 30, 100));
 
-        JButton registerBtn = createStyledButton("Register as Professor");
-        JButton assignCourseBtn = createStyledButton("Assign Course");
-        JButton viewEnrolledBtn = createStyledButton("View Enrolled Students");
-        JButton backBtn = createStyledButton("Back to Main Menu");
+		JButton registerBtn = createStyledButton("Register as Professor");
+		JButton viewCoursesBtn = createStyledButton("View Available Courses");
+		JButton assignBtn = createStyledButton("Assign Yourself to a Course");
+		JButton backBtn = createStyledButton("Back to Main Menu");
 
-        btnPanel.add(registerBtn);
-        btnPanel.add(assignCourseBtn);
-        btnPanel.add(viewEnrolledBtn);
-        btnPanel.add(backBtn);
+		btnPanel.add(registerBtn);
+		btnPanel.add(viewCoursesBtn);
+		btnPanel.add(assignBtn);
+		btnPanel.add(backBtn);
 
-        background.add(btnPanel, BorderLayout.CENTER);
-        add(background);
+		background.add(btnPanel, BorderLayout.CENTER);
+		add(background);
 
-        // === Action Listeners ===
-        registerBtn.addActionListener(e -> showStyledRegisterDialog());
-        
-        assignCourseBtn.addActionListener(e -> showStyledCourseAssignDialog());
-        
-        viewEnrolledBtn.addActionListener(e -> showStyledViewEnrolledDialog());
+		registerBtn.addActionListener(e -> showProfessorRegistrationDialog());
+		viewCoursesBtn.addActionListener(e -> showCourseList());
+		assignBtn.addActionListener(e -> showAssignmentDialog());
+		backBtn.addActionListener(e -> {
+			dispose();
+			new MainWindow();
+		});
 
-        backBtn.addActionListener(e -> {
-            dispose();
-            new MainWindow();
-        });
+		setVisible(true);
+	}
 
-        setVisible(true);
-    }
+	private void showProfessorRegistrationDialog() {
+		JPanel panel = new JPanel(new GridLayout(2, 2, 10, 10));
+		panel.setBackground(new Color(255, 248, 240));
 
-    private void showStyledRegisterDialog() {
-        JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBackground(new Color(240, 248, 255));
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 10, 10, 10);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
+		JTextField nameField = new JTextField();
+		JTextField emailField = new JTextField();
 
-        JLabel label = new JLabel("Enter Professor Name:");
-        label.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        JTextField textField = new JTextField(15);
-        textField.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        textField.setBackground(new Color(245, 250, 255));
+		panel.add(new JLabel("Professor Name:"));
+		panel.add(nameField);
+		panel.add(new JLabel("Email:"));
+		panel.add(emailField);
 
-        gbc.gridx = 0;
-        panel.add(label, gbc);
-        gbc.gridx = 1;
-        panel.add(textField, gbc);
+		int result = JOptionPane.showConfirmDialog(this, panel, "Professor Registration",
+				JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 
-        int result = JOptionPane.showConfirmDialog(this, panel, "👤 Register Professor",
-                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+		if (result == JOptionPane.OK_OPTION) {
+			String name = nameField.getText().trim();
+			String email = emailField.getText().trim();
 
-        if (result == JOptionPane.OK_OPTION) {
-            String name = textField.getText().trim();
-            if (!name.isEmpty()) {
-                com.gqt.cms.CourseDatabase.professors[com.gqt.cms.CourseDatabase.professorCount++] = name;
-                JOptionPane.showMessageDialog(this, "✅ Professor " + name + " registered.");
-            }
-        }
-    }
+			if (!name.isEmpty() && !email.isEmpty()) {
+				Professor professor = new Professor(name, email);
+				ProfessorDAO.addProfessor(professor);
+			} else {
+				DialogUtil.showMessage("All fields are required.");
+			}
+		}
+	}
 
+	private void showCourseList() {
+		List<String[]> courseData = CourseDAO.getCourseIdAndNames();  // Each item: [cid, cname]
 
-    private void showStyledCourseAssignDialog() {
-        JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBackground(new Color(240, 248, 255));
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 10, 10, 10);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
+		if (courseData.isEmpty()) {
+			DialogUtil.showMessage("No courses available.");
+			return;
+		}
 
-        JLabel label = new JLabel("Enter your name:");
-        label.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        JTextField nameField = new JTextField(15);
-        nameField.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        nameField.setBackground(new Color(245, 250, 255));
+		String[] columnNames = { "Course ID", "Course Name" };
+		String[][] tableData = new String[courseData.size()][2];
 
-        gbc.gridx = 0;
-        panel.add(label, gbc);
-        gbc.gridx = 1;
-        panel.add(nameField, gbc);
+		for (int i = 0; i < courseData.size(); i++) {
+			tableData[i][0] = courseData.get(i)[0]; // CID
+			tableData[i][1] = courseData.get(i)[1]; // CNAME
+		}
 
-        int result = JOptionPane.showConfirmDialog(this, panel, "📘 Assign Course",
-                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+		JTable table = new JTable(tableData, columnNames);
+		table.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+		table.setRowHeight(25);
+		table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 15));
+		table.getTableHeader().setBackground(new Color(210, 180, 140));
+		table.setBackground(new Color(255, 248, 240));
 
-        if (result == JOptionPane.OK_OPTION) {
-            String name = nameField.getText().trim();
-            if (!name.isEmpty()) {
-                professorData.assignCourseToProfessor(name);
-            }
-        }
-    }
+		JScrollPane scrollPane = new JScrollPane(table);
+		scrollPane.setPreferredSize(new Dimension(400, 200));
+		scrollPane.getViewport().setBackground(new Color(255, 248, 240));
 
-    
-    private void showStyledViewEnrolledDialog() {
-        JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBackground(new Color(240, 248, 255));
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 10, 10, 10);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
+		JPanel panel = new JPanel(new BorderLayout());
+		panel.setBackground(new Color(255, 248, 240));
+		panel.add(scrollPane, BorderLayout.CENTER);
 
-        JLabel label = new JLabel("Enter your name:");
-        label.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        JTextField nameField = new JTextField(15);
-        nameField.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        nameField.setBackground(new Color(245, 250, 255));
+		JOptionPane.showMessageDialog(this, panel, "📘 Available Courses", JOptionPane.PLAIN_MESSAGE);
+	}
 
-        gbc.gridx = 0;
-        panel.add(label, gbc);
-        gbc.gridx = 1;
-        panel.add(nameField, gbc);
+	private void showAssignmentDialog() {
+		JPanel panel = new JPanel(new GridLayout(2, 2, 10, 10));
+		panel.setBackground(new Color(255, 248, 240));
 
-        int result = JOptionPane.showConfirmDialog(this, panel, "👥 View Enrolled Students",
-                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+		JTextField pidField = new JTextField();
+		JTextField cidField = new JTextField();
 
-        if (result == JOptionPane.OK_OPTION) {
-            String name = nameField.getText().trim();
-            if (!name.isEmpty()) {
-                professorData.viewStudentsByCourse(name);
-            }
-        }
-    }
+		panel.add(new JLabel("Professor ID:"));
+		panel.add(pidField);
+		panel.add(new JLabel("Course ID:"));
+		panel.add(cidField);
 
-    // ✅ Shared styled button method
-    private JButton createStyledButton(String text) {
-        JButton btn = new JButton(text);
-        btn.setFocusPainted(false);
-        btn.setBackground(new Color(70, 130, 180));
-        btn.setForeground(Color.WHITE);
-        btn.setFont(new Font("Segoe UI", Font.PLAIN, 15));
-        btn.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
-        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+		int result = JOptionPane.showConfirmDialog(this, panel, "Assign Yourself to Course",
+				JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 
-        Color defaultColor = btn.getBackground();
-        Color hoverColor = new Color(60, 110, 160);
+		if (result == JOptionPane.OK_OPTION) {
+			try {
+				int pid = Integer.parseInt(pidField.getText().trim());
+				int cid = Integer.parseInt(cidField.getText().trim());
 
-        btn.addMouseListener(new MouseAdapter() {
-            public void mouseEntered(MouseEvent e) {
-                btn.setBackground(hoverColor);
-            }
+				if (ProfessorDAO.assignCourseToProfessor(pid, cid)) {
+					DialogUtil.showMessage("Course assigned successfully!");
+				} else {
+					DialogUtil.showMessage("Assignment failed. Check IDs.");
+				}
+			} catch (NumberFormatException ex) {
+				DialogUtil.showMessage("Please enter valid numeric IDs.");
+			}
+		}
+	}
 
-            public void mouseExited(MouseEvent e) {
-                btn.setBackground(defaultColor);
-            }
-        });
+	private JButton createStyledButton(String text) {
+		JButton btn = new JButton(text);
+		btn.setFocusPainted(false);
+		btn.setBackground(new Color(210, 105, 30));
+		btn.setForeground(Color.WHITE);
+		btn.setFont(new Font("Segoe UI", Font.PLAIN, 15));
+		btn.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
+		btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        return btn;
-    }
+		Color defaultColor = btn.getBackground();
+		Color hoverColor = new Color(160, 82, 45);
+
+		btn.addMouseListener(new MouseAdapter() {
+			public void mouseEntered(MouseEvent e) {
+				btn.setBackground(hoverColor);
+			}
+
+			public void mouseExited(MouseEvent e) {
+				btn.setBackground(defaultColor);
+			}
+		});
+
+		return btn;
+	}
 }

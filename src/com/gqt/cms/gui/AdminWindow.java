@@ -1,298 +1,282 @@
-// File: com/gqt/cms/gui/AdminWindow.java
 package com.gqt.cms.gui;
 
-import com.gqt.cms.CourseDatabase;
-import com.gqt.cms.datamanagement.AdminData;
-import com.gqt.cms.datamanagement.ProfessorData;
-import com.gqt.cms.datamanagement.StudentData;
+import com.gqt.cms.datamanagement.AdminDAO;
+import com.gqt.cms.datamanagement.CourseDAO;
+import com.gqt.cms.datamanagement.EnrollmentDAO;
 import com.gqt.cms.utils.DialogUtil;
-import com.gqt.cms.utils.MultiInputDialogUtil;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.List;
 
 public class AdminWindow extends JFrame {
-    private AdminData adminData = new AdminData();
-    private StudentData studentData = new StudentData();
-    private ProfessorData professorData = new ProfessorData();
 
-    public AdminWindow() {
-    	
-    	UIManager.put("OptionPane.background", new Color(240, 248, 255));
-        UIManager.put("Panel.background", new Color(240, 248, 255));
-        UIManager.put("Button.background", new Color(70, 130, 180));
-        UIManager.put("Button.foreground", Color.WHITE);
-        UIManager.put("OptionPane.messageFont", new Font("Segoe UI", Font.PLAIN, 14));
-        UIManager.put("OptionPane.buttonFont", new Font("Segoe UI", Font.PLAIN, 13));
-    	
-        setTitle("👤 Admin Panel - GQT CMS");
-        setSize(550, 450);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLocationRelativeTo(null);
-        setResizable(false);
+	public AdminWindow() {
+		UIManager.put("OptionPane.background", new Color(240, 248, 255));
+		UIManager.put("Panel.background", new Color(240, 248, 255));
+		UIManager.put("Button.background", new Color(70, 130, 180));
+		UIManager.put("Button.foreground", Color.WHITE);
+		UIManager.put("OptionPane.messageFont", new Font("Segoe UI", Font.PLAIN, 14));
+		UIManager.put("OptionPane.buttonFont", new Font("Segoe UI", Font.PLAIN, 13));
 
-        // === Main Background ===
-        JPanel background = new JPanel(new BorderLayout());
-        background.setBackground(new Color(240, 248, 255)); // Light blueish
+		setTitle("Admin Panel - GQT Course Management System");
+		setSize(500, 420);
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setLocationRelativeTo(null);
+		setResizable(false);
 
-        // === Heading ===
-        JLabel heading = new JLabel("Admin Dashboard", JLabel.CENTER);
-        heading.setFont(new Font("Segoe UI", Font.BOLD, 22));
-        heading.setForeground(new Color(30, 60, 120));
-        heading.setBorder(BorderFactory.createEmptyBorder(20, 10, 10, 10));
-        background.add(heading, BorderLayout.NORTH);
+		JPanel background = new JPanel(new BorderLayout());
+		background.setBackground(new Color(240, 248, 255));
 
-        // === Buttons Panel ===
-        JPanel btnPanel = new JPanel(new GridLayout(8, 1, 10, 10));
-        btnPanel.setBorder(BorderFactory.createEmptyBorder(10, 100, 20, 100));
-        btnPanel.setBackground(background.getBackground());
+		JLabel heading = new JLabel("Admin Dashboard", JLabel.CENTER);
+		heading.setFont(new Font("Segoe UI", Font.BOLD, 22));
+		heading.setForeground(new Color(30, 60, 120));
+		heading.setBorder(BorderFactory.createEmptyBorder(20, 0, 10, 0));
+		background.add(heading, BorderLayout.NORTH);
 
-        // === Button List ===
-        JButton addCourseBtn = createStyledButton("Add Course");
-        JButton addStudentBtn = createStyledButton("Add Student");
-        JButton addProfessorBtn = createStyledButton("Add Professor");
-        JButton viewCoursesBtn = createStyledButton("View Courses");
-        JButton viewStudentsBtn = createStyledButton("View Students");
-        JButton viewProfessorsBtn = createStyledButton("View Professors");
-        JButton viewEnrollmentsBtn = createStyledButton("View Enrollments");
-        JButton logoutBtn = createStyledButton("Logout");
+		JPanel buttonPanel = new JPanel();
+		buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.Y_AXIS));
+		buttonPanel.setBackground(new Color(240, 248, 255));
+		buttonPanel.setBorder(BorderFactory.createEmptyBorder(30, 100, 30, 100));
 
-        // === Add to Panel ===
-        btnPanel.add(addCourseBtn);
-        btnPanel.add(addStudentBtn);
-        btnPanel.add(addProfessorBtn);
-        btnPanel.add(viewCoursesBtn);
-        btnPanel.add(viewStudentsBtn);
-        btnPanel.add(viewProfessorsBtn);
-        btnPanel.add(viewEnrollmentsBtn);
-        btnPanel.add(logoutBtn);
+		JButton addCourseBtn = createStyledButton("Add New Course");
+		JButton viewCoursesBtn = createStyledButton("View All Courses");
+		JButton viewEnrollmentsBtn = createStyledButton("View Enrollments");
+		JButton deleteCourseBtn = createStyledButton("Delete Course");
+		JButton backBtn = createStyledButton("Back to Main Menu");
 
-        // === Action Listeners ===
-        addCourseBtn.addActionListener(e -> handleAddCourses());
-        addStudentBtn.addActionListener(e -> handleAddStudents());
-        addProfessorBtn.addActionListener(e -> handleAddProfessors());
-        viewStudentsBtn.addActionListener(e -> handleViewStudents());
-        viewCoursesBtn.addActionListener(e -> handleViewCourses());
-        viewProfessorsBtn.addActionListener(e -> handleViewProfessors());
-        viewEnrollmentsBtn.addActionListener(e -> handleViewEnrollments());
-        logoutBtn.addActionListener(e -> {
-            dispose();
-            new MainWindow();
-        });
+		buttonPanel.add(addSpacing());
+		buttonPanel.add(addCourseBtn);
+		buttonPanel.add(addSpacing());
+		buttonPanel.add(viewCoursesBtn);
+		buttonPanel.add(addSpacing());
+		buttonPanel.add(viewEnrollmentsBtn);
+		buttonPanel.add(addSpacing());
+		buttonPanel.add(deleteCourseBtn);
+		buttonPanel.add(addSpacing());
+		buttonPanel.add(backBtn);
 
-        // === Add Everything to Frame ===
-        background.add(btnPanel, BorderLayout.CENTER);
-        add(background);
-        setVisible(true);
-    }
-    
-    
-    
-    private void handleAddCourses() {
-        Integer count = DialogUtil.askCountInput(this, "Add Courses", "How many courses do you want to add?");
-        if (count == null) {
-            JOptionPane.showMessageDialog(this, "Invalid input. Please enter a valid number.");
-            return;
-        }
+		background.add(buttonPanel, BorderLayout.CENTER);
+		add(background);
 
-        String[] courses = MultiInputDialogUtil.showInputDialog(this, count, "Enter Course Names", "Course");
-        if (courses != null) {
-            int added = 0;
-            for (String course : courses) {
-                if (!course.isEmpty() && CourseDatabase.courseCount < 100) {
-                    CourseDatabase.courses[CourseDatabase.courseCount++] = course;
-                    added++;
-                }
-            }
-            JOptionPane.showMessageDialog(this, added + " course(s) added successfully.");
-        }
-    }
+		addCourseBtn.addActionListener(e -> showAddCourseDialog());
+		viewCoursesBtn.addActionListener(e -> showAllCoursesDialog());
+		viewEnrollmentsBtn.addActionListener(e -> showAllEnrollmentsDialog());
+		deleteCourseBtn.addActionListener(e -> showDeleteCourseDialog());
+		backBtn.addActionListener(e -> {
+			dispose();
+			new MainWindow();
+		});
+
+		setVisible(true);
+	}
+
+	private void showAddCourseDialog() {
+		JPanel panel = new JPanel(new GridBagLayout());
+		panel.setBackground(new Color(240, 248, 255));
+		GridBagConstraints gbc = new GridBagConstraints();
+		gbc.insets = new Insets(10, 10, 10, 10);
+		gbc.fill = GridBagConstraints.HORIZONTAL;
+
+		JLabel cnameLabel = new JLabel("Course Name:");
+		JTextField cnameField = new JTextField(15);
+		JLabel durationLabel = new JLabel("Duration:");
+		JTextField durationField = new JTextField(15);
+		JLabel feesLabel = new JLabel("Fees:");
+		JTextField feesField = new JTextField(15);
+
+		cnameLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+		durationLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+		feesLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+
+		cnameField.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+		durationField.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+		feesField.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+
+		cnameField.setBackground(new Color(245, 250, 255));
+		durationField.setBackground(new Color(245, 250, 255));
+		feesField.setBackground(new Color(245, 250, 255));
+
+		gbc.gridx = 0;
+		gbc.gridy = 0;
+		panel.add(cnameLabel, gbc);
+		gbc.gridx = 1;
+		panel.add(cnameField, gbc);
+
+		gbc.gridx = 0;
+		gbc.gridy = 1;
+		panel.add(durationLabel, gbc);
+		gbc.gridx = 1;
+		panel.add(durationField, gbc);
+
+		gbc.gridx = 0;
+		gbc.gridy = 2;
+		panel.add(feesLabel, gbc);
+		gbc.gridx = 1;
+		panel.add(feesField, gbc);
+
+		int result = JOptionPane.showConfirmDialog(this, panel, "Add Course", JOptionPane.OK_CANCEL_OPTION,
+				JOptionPane.PLAIN_MESSAGE);
+
+		if (result == JOptionPane.OK_OPTION) {
+			String cname = cnameField.getText().trim();
+			String duration = durationField.getText().trim();
+			String feeText = feesField.getText().trim();
+
+			if (!cname.isEmpty() && !duration.isEmpty() && !feeText.isEmpty()) {
+				try {
+					float fees = Float.parseFloat(feeText);
+					AdminDAO.addCourse(cname, duration, fees);
+				} catch (NumberFormatException e) {
+					DialogUtil.showMessage("Fees must be a valid number.");
+				}
+			} else {
+				DialogUtil.showMessage("Please fill all fields!");
+			}
+		}
+	}
+
+	private void showDeleteCourseDialog() {
+	    List<String[]> courseList = CourseDAO.getCourseIdAndNames();
+	    if (courseList.isEmpty()) {
+	        DialogUtil.showMessage("No courses to delete.");
+	        return;
+	    }
+
+	    // Convert courseList to a list of course names (or "cid - cname" for better clarity)
+	    List<String> courseNames = new ArrayList<>();
+	    for (String[] course : courseList) {
+	        courseNames.add(course[0] + " - " + course[1]);  // Format: "101 - Java Basics"
+	    }
+
+	    String selectedCourse = (String) JOptionPane.showInputDialog(
+	            this,
+	            "Select course to delete:",
+	            "Delete Course",
+	            JOptionPane.PLAIN_MESSAGE,
+	            null,
+	            courseNames.toArray(),
+	            courseNames.get(0)
+	    );
+
+	    if (selectedCourse != null && !selectedCourse.trim().isEmpty()) {
+	        // Extract course name (assuming format: "101 - Java Basics")
+	        String courseName = selectedCourse.split(" - ", 2)[1];
+
+	        int confirm = JOptionPane.showConfirmDialog(
+	                this,
+	                "Are you sure you want to delete the course \"" + courseName + "\"?",
+	                "Confirm Delete",
+	                JOptionPane.YES_NO_OPTION
+	        );
+
+	        if (confirm == JOptionPane.YES_OPTION) {
+	            boolean success = AdminDAO.deleteCourse(courseName);
+	            DialogUtil.showMessage(success ? "Course deleted successfully." : "Failed to delete course.");
+	        }
+	    }
+	}
 
 
-    private void handleAddStudents() {
-        Integer count = DialogUtil.askCountInput(this, "Add Students", "How many students do you want to add?");
-        if (count == null) {
-            JOptionPane.showMessageDialog(this, "Invalid number. Try again.");
-            return;
-        }
+	private void showAllCoursesDialog() {
+	    List<String[]> courseList = CourseDAO.getCourseIdAndNames();
 
-        String[] students = MultiInputDialogUtil.showInputDialog(this, count, "Enter Student Names", "Student");
-        if (students != null) {
-            int added = 0;
-            for (String name : students) {
-                if (!name.isEmpty() && CourseDatabase.studentCount < 100) {
-                    CourseDatabase.students[CourseDatabase.studentCount++] = name;
-                    added++;
-                }
-            }
-            JOptionPane.showMessageDialog(this, added + " student(s) added successfully.");
-        }
-    }
+	    if (courseList.isEmpty()) {
+	        DialogUtil.showMessage("No courses available.");
+	        return;
+	    }
 
-    private void handleAddProfessors() {
-        Integer count = DialogUtil.askCountInput(this, "Add Professors", "How many professors do you want to add?");
-        if (count == null) {
-            JOptionPane.showMessageDialog(this, "Invalid number. Try again.");
-            return;
-        }
+	    // Table headers
+	    String[] columnNames = {"Course ID", "Course Name"};
 
-        String[] names = MultiInputDialogUtil.showInputDialog(this, count, "Enter Professor Names", "Professor");
-        if (names != null) {
-            int added = 0;
-            for (String name : names) {
-                if (!name.isEmpty() && CourseDatabase.professorCount < 100) {
-                    CourseDatabase.professors[CourseDatabase.professorCount++] = name;
-                    CourseDatabase.assignedCourses[CourseDatabase.professorCount - 1] = null;
-                    added++;
-                }
-            }
-            JOptionPane.showMessageDialog(this, added + " professor(s) added.");
-        }
-    }
-    
-    private void handleViewStudents() {
-        if (CourseDatabase.studentCount == 0) {
-            JOptionPane.showMessageDialog(this,
-                    "No students registered yet.",
-                    "Student List",
-                    JOptionPane.INFORMATION_MESSAGE);
-            return;
-        }
+	    // Table data
+	    Object[][] data = new Object[courseList.size()][2];
+	    for (int i = 0; i < courseList.size(); i++) {
+	        data[i][0] = courseList.get(i)[0];
+	        data[i][1] = courseList.get(i)[1];
+	    }
 
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < CourseDatabase.studentCount; i++) {
-            sb.append(i + 1).append(". ").append(CourseDatabase.students[i]).append("\n");
-        }
+	    JTable table = new JTable(data, columnNames);
+	    table.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+	    table.setRowHeight(24);
+	    table.setEnabled(false);
+	    table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 14));
+	    table.getTableHeader().setBackground(new Color(100, 149, 237));
+	    table.getTableHeader().setForeground(Color.WHITE);
 
-        JTextArea textArea = new JTextArea(sb.toString());
-        textArea.setFont(new Font("Segoe UI", Font.PLAIN, 15));
-        textArea.setBackground(new Color(245, 250, 255));
-        textArea.setForeground(new Color(30, 30, 60));
-        textArea.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(200, 220, 255), 2, true),
-                BorderFactory.createEmptyBorder(10, 10, 10, 10)
-        ));
-        textArea.setEditable(false);
-        textArea.setFocusable(false);
-        textArea.setCaretPosition(0);
+	    JScrollPane scrollPane = new JScrollPane(table);
+	    scrollPane.setPreferredSize(new Dimension(380, 220));
+	    scrollPane.getViewport().setBackground(new Color(240, 248, 255));
 
-        JScrollPane scrollPane = new JScrollPane(textArea);
-        scrollPane.setPreferredSize(new Dimension(380, 250));
-        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+	    JPanel panel = new JPanel(new BorderLayout());
+	    panel.setBackground(new Color(240, 248, 255));
+	    panel.add(scrollPane, BorderLayout.CENTER);
 
-        // Styled panel wrapper
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.setBackground(new Color(240, 248, 255));
-        panel.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
-        panel.add(scrollPane, BorderLayout.CENTER);
+	    JOptionPane.showMessageDialog(this, panel, "Available Courses", JOptionPane.PLAIN_MESSAGE);
+	}
 
-        JOptionPane.showMessageDialog(this, panel, "👥 Registered Students", JOptionPane.PLAIN_MESSAGE);
-    }
-    private void handleViewProfessors() {
-        if (CourseDatabase.professorCount == 0) {
-            JOptionPane.showMessageDialog(this,
-                    "No professors registered yet.",
-                    "Professor List",
-                    JOptionPane.INFORMATION_MESSAGE);
-            return;
-        }
 
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < CourseDatabase.professorCount; i++) {
-            sb.append(i + 1).append(". ").append(CourseDatabase.professors[i]).append("\n");
-        }
+	private void showAllEnrollmentsDialog() {
+		List<String> enrollments = EnrollmentDAO.getAllEnrollments();
 
-        showStylishDialog("Registered Professors", sb.toString());
-    }
+		if (enrollments.isEmpty()) {
+			DialogUtil.showMessage("No enrollments found.");
+			return;
+		}
 
-    
+		StringBuilder sb = new StringBuilder();
+		int i = 1;
+		for (String entry : enrollments) {
+			sb.append(i++).append(". ").append(entry).append("\n");
+		}
 
-    private void handleViewCourses() {
-        if (CourseDatabase.courseCount == 0) {
-            JOptionPane.showMessageDialog(this,
-                    "No courses available yet.",
-                    "Course List",
-                    JOptionPane.INFORMATION_MESSAGE);
-            return;
-        }
+		JTextArea area = new JTextArea(sb.toString());
+		area.setEditable(false);
+		area.setFont(new Font("Segoe UI", Font.PLAIN, 15));
+		area.setBackground(new Color(245, 250, 255));
+		area.setBorder(BorderFactory.createLineBorder(new Color(180, 200, 240)));
 
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < CourseDatabase.courseCount; i++) {
-            sb.append(i + 1).append(". ").append(CourseDatabase.courses[i]).append("\n");
-        }
+		JScrollPane scroll = new JScrollPane(area);
+		scroll.setPreferredSize(new Dimension(380, 220));
 
-        showStylishDialog("📘 Available Courses", sb.toString());
-    }
+		JPanel panel = new JPanel(new BorderLayout());
+		panel.setBackground(new Color(240, 248, 255));
+		panel.add(scroll);
 
-    private void handleViewEnrollments() {
-        if (CourseDatabase.enrollmentCount == 0) {
-            JOptionPane.showMessageDialog(this,
-                    "No enrollments recorded yet.",
-                    "Enrollment List",
-                    JOptionPane.INFORMATION_MESSAGE);
-            return;
-        }
+		JOptionPane.showMessageDialog(this, panel, "Enrollments", JOptionPane.PLAIN_MESSAGE);
+	}
 
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < CourseDatabase.enrollmentCount; i++) {
-            sb.append("🧑‍🎓 ").append(CourseDatabase.enrolledStudentNames[i])
-              .append(" → ").append(CourseDatabase.enrolledCourseNames[i]).append("\n");
-        }
+	private JButton createStyledButton(String text) {
+		JButton btn = new JButton(text);
+		btn.setFocusPainted(false);
+		btn.setBackground(new Color(70, 130, 180));
+		btn.setForeground(Color.WHITE);
+		btn.setFont(new Font("Segoe UI", Font.PLAIN, 15));
+		btn.setAlignmentX(Component.CENTER_ALIGNMENT);
+		btn.setMaximumSize(new Dimension(220, 40));
+		btn.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
+		btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        showStylishDialog("📒 Enrollments", sb.toString());
-    }
+		Color defaultColor = btn.getBackground();
+		Color hoverColor = new Color(60, 110, 160);
 
-    private void showStylishDialog(String title, String content) {
-        JTextArea textArea = new JTextArea(content);
-        textArea.setFont(new Font("Segoe UI", Font.PLAIN, 15));
-        textArea.setBackground(new Color(245, 250, 255));
-        textArea.setForeground(new Color(30, 30, 60));
-        textArea.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(200, 220, 255), 2, true),
-                BorderFactory.createEmptyBorder(10, 10, 10, 10)
-        ));
-        textArea.setEditable(false);
-        textArea.setFocusable(false);
-        textArea.setCaretPosition(0);
+		btn.addMouseListener(new MouseAdapter() {
+			public void mouseEntered(MouseEvent e) {
+				btn.setBackground(hoverColor);
+			}
 
-        JScrollPane scrollPane = new JScrollPane(textArea);
-        scrollPane.setPreferredSize(new Dimension(380, 250));
-        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+			public void mouseExited(MouseEvent e) {
+				btn.setBackground(defaultColor);
+			}
+		});
 
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.setBackground(new Color(240, 248, 255));
-        panel.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
-        panel.add(scrollPane, BorderLayout.CENTER);
+		return btn;
+	}
 
-        JOptionPane.showMessageDialog(this, panel, title, JOptionPane.PLAIN_MESSAGE);
-    }
-
-    
-    // ✅ Styled Flat Button with Hover Effect
-    private JButton createStyledButton(String text) {
-        JButton btn = new JButton(text);
-        btn.setFocusPainted(false);
-        btn.setBackground(new Color(70, 130, 180)); // Steel Blue
-        btn.setForeground(Color.WHITE);
-        btn.setFont(new Font("Segoe UI", Font.PLAIN, 15));
-        btn.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
-        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-        Color defaultColor = btn.getBackground();
-        Color hoverColor = new Color(60, 110, 160); // Darker blue
-
-        btn.addMouseListener(new MouseAdapter() {
-            public void mouseEntered(MouseEvent e) {
-                btn.setBackground(hoverColor);
-            }
-
-            public void mouseExited(MouseEvent e) {
-                btn.setBackground(defaultColor);
-            }
-        });
-
-        return btn;
-    }
+	private Component addSpacing() {
+		return Box.createVerticalStrut(10);
+	}
 }

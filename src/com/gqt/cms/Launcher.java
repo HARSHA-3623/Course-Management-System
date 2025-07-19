@@ -1,13 +1,14 @@
-// File: com/gqt/cms/Launcher.java
 package com.gqt.cms;
 
 import javax.swing.SwingUtilities;
 import com.gqt.cms.gui.MainWindow;
 
 public class Launcher {
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            new MainWindow(); // Launch the role selection window
-        });
-    }
+	public static void main(String[] args) {
+		SwingUtilities.invokeLater(() -> {
+			new MainWindow();
+		});
+	}
 }
+
+

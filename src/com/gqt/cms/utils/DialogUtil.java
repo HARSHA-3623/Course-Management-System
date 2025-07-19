@@ -1,8 +1,9 @@
-// File: com/gqt/cms/utils/DialogUtil.java
 package com.gqt.cms.utils;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.sql.*;
 
 public class DialogUtil {
 
@@ -27,22 +28,55 @@ public class DialogUtil {
         UIManager.put("OptionPane.messageFont", new Font("Segoe UI", Font.PLAIN, 14));
         UIManager.put("OptionPane.buttonFont", new Font("Segoe UI", Font.PLAIN, 13));
 
-        int result = JOptionPane.showConfirmDialog(
-                parent,
-                panel,
-                title,
-                JOptionPane.OK_CANCEL_OPTION,
-                JOptionPane.PLAIN_MESSAGE
-        );
+        int result = JOptionPane.showConfirmDialog(parent, panel, title, JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.PLAIN_MESSAGE);
 
         if (result == JOptionPane.OK_OPTION) {
             try {
                 int value = Integer.parseInt(countField.getText().trim());
                 return (value > 0 && value <= 100) ? value : null;
-            } catch (NumberFormatException ignored) {}
+            } catch (NumberFormatException ignored) {
+            }
         }
         return null;
     }
+
+    public static void showMessage(String message) {
+        JOptionPane.showMessageDialog(null, message, "Info", JOptionPane.INFORMATION_MESSAGE);
+    }
     
+
+    public static void showAvailableCoursesDialog() {
+        String[] columnNames = {"Course ID", "Course Name"};
+        DefaultTableModel model = new DefaultTableModel(columnNames, 0);
+
+        try (Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/cms_db", "root", "root");
+             Statement stmt = con.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT cid, cname FROM courses")) {
+
+            while (rs.next()) {
+                int cid = rs.getInt("cid");
+                String cname = rs.getString("cname");
+                model.addRow(new Object[]{cid, cname});
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Failed to load courses: " + e.getMessage());
+            return;
+        }
+
+        JTable table = new JTable(model);
+        table.setFillsViewportHeight(true);
+        table.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        table.setRowHeight(25);
+        table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 13));
+        table.setEnabled(false); // make table non-editable
+
+        JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane.setPreferredSize(new Dimension(400, 200));
+
+        JOptionPane.showMessageDialog(null, scrollPane, "Available Courses", JOptionPane.PLAIN_MESSAGE);
+    }
     
 }

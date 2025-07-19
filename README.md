@@ -1,189 +1,138 @@
 
-# 🎓 Course Management System (Java Swing-Based)
+# 🎓 Course Management System (Java Swing + JDBC)
 
-A role-based Java application built with **Java Swing** that allows Admins, Professors, and Students to manage academic operations such as course registration, enrollment, and assignments through a clean graphical user interface (GUI).
-
----
-
-## 📌 Key Features
-
-### 👤 Admin
-- Register new **Students** and **Professors**
-- Add new **Courses**
-- Central authority to populate the system
-
-### 👨‍🏫 Professor
-- Self-register into the system
-- View all available courses
-- Assign themselves to a course
-- View students enrolled in their assigned course
-
-### 🎓 Student
-- Self-register with personal details
-- View available courses
-- Enroll in a selected course
+A modular, role-based academic application built with **Java Swing GUI** and **MySQL JDBC** integration. It allows **Admins**, **Professors**, and **Students** to perform course-related operations such as registration, enrollment, and assignment via a visually interactive system.
 
 ---
 
-## 🧠 System Architecture
+## ✅ Major Enhancements
 
-This project is **modularized** into different packages following the MVC-style pattern, ensuring separation of concerns.
+- 🚀 **Shifted from in-memory arrays to MySQL database** for storing students, professors, courses, and enrollments.
+- 🖼️ **Redesigned GUI** using `GridBagLayout`, `JComboBox`, `JOptionPane`, and `JTable` for modern, consistent dialogs.
+- 🔄 Separated responsibilities into DAO classes: `AdminDAO`, `StudentDAO`, `ProfessorDAO`, `CourseDAO`, and `EnrollmentDAO`.
+- 📚 Added new enrollment table logic and fixed student course linking.
+- 🧮 Fully mapped Course ID → Course Name relationships in UI.
+- 🧑‍🏫 Professors can now register and assign themselves to courses (under construction).
+
+---
+
+## 📁 Project Structure
 
 ```
 src/
 └── com.gqt.cms
-    ├── Launcher.java
-    └── CourseDatabase.java
+    ├── CourseDatabase.java         # DB connection logic
+    └── Launcher.java               # Entry point
 
 ├── com.gqt.cms.datamanagement
-│   ├── AdminData.java
-│   ├── ProfessorData.java
-│   └── StudentData.java
+│   ├── AdminDAO.java              # Admin DB operations
+│   ├── CourseDAO.java             # Course DB logic
+│   ├── EnrollmentDAO.java         # Manages enrollments
+│   ├── ProfessorDAO.java          # Professor-related DB actions
+│   └── StudentDAO.java            # Student-related DB actions
 
 ├── com.gqt.cms.gui
-│   ├── MainWindow.java
-│   ├── AdminWindow.java
-│   ├── ProfessorWindow.java
-│   └── StudentWindow.java
+│   ├── MainWindow.java            # Role selection screen
+│   ├── AdminWindow.java           # Admin features
+│   ├── ProfessorWindow.java       # Professor panel (under development)
+│   └── StudentWindow.java         # Student dashboard
 
 ├── com.gqt.cms.users
-│   ├── Professor.java
-│   └── Student.java
+│   ├── Professor.java             # Model class for Professor
+│   └── Student.java               # Model class for Student
 
 └── com.gqt.cms.utils
-    ├── DialogUtil.java
-    └── MultiInputDialogUtil.java
+    ├── DialogUtil.java            # Reusable message/input dialogs
+    └── MultiInputDialogUtil.java  # Advanced input panels
 ```
 
 ---
 
-## 🧩 Module-wise Explanation
+## 🔑 Core Features by Role
 
-### 📁 `com.gqt.cms`
-#### `Launcher.java`
-- The entry point of the application.
-- Launches the `MainWindow` which lets users choose between Admin, Professor, or Student roles.
+### 👤 Admin
+- ➕ Add new courses
+- 🔍 View all available courses (with IDs)
+- ❌ Delete courses from DB
+- 📜 View all student-course enrollments
 
-#### `CourseDatabase.java`
-- Centralized array-based storage for all courses.
-- Provides utility methods to add and fetch courses across the system.
+### 👨‍🏫 Professor
+- ✅ Register with name and email
+- 📘 View available courses
+- 🎯 Assign themselves to teach a course
+- 🔍 (Upcoming) View students in their assigned course
 
----
-
-### 📁 `com.gqt.cms.datamanagement`
-#### `AdminData.java`
-- Handles logic related to Admin actions such as adding students, professors, and courses.
-- Interacts with other modules (ProfessorData, StudentData).
-
-#### `ProfessorData.java`
-- Maintains a static array of professors.
-- Allows professors to:
-  - Self-register
-  - Assign themselves to courses
-  - View students enrolled in their assigned course
-
-#### `StudentData.java`
-- Stores student records in an array.
-- Allows students to:
-  - Register with details
-  - Enroll in a course
+### 🎓 Student
+- ✅ Register using name + email
+- 📘 View course list (with `cid`)
+- ✍️ Enroll into course using Student ID + selected course
+- ✅ Enrollments are stored in a junction table `enrollments`
 
 ---
 
-### 📁 `com.gqt.cms.gui`
-#### `MainWindow.java`
-- Displays the main menu.
-- Buttons for Admin, Professor, and Student roles.
+## 💽 MySQL Tables Used
 
-#### `AdminWindow.java`
-- GUI window for admin operations:
-  - Register students and professors
-  - Add courses using `MultiInputDialogUtil`
+```sql
+CREATE TABLE students (
+    sid INT AUTO_INCREMENT PRIMARY KEY,
+    sname VARCHAR(100),
+    email VARCHAR(100) UNIQUE
+);
 
-#### `ProfessorWindow.java`
-- GUI for professor-specific operations:
-  - Register
-  - View courses
-  - Assign themselves to a course
-  - View enrolled students in their course
+CREATE TABLE professors (
+    pid INT AUTO_INCREMENT PRIMARY KEY,
+    pname VARCHAR(100),
+    email VARCHAR(100) UNIQUE
+);
 
-#### `StudentWindow.java`
-- GUI for student-specific operations:
-  - Register
-  - View available courses
-  - Enroll in a selected course
+CREATE TABLE courses (
+    cid INT AUTO_INCREMENT PRIMARY KEY,
+    cname VARCHAR(100),
+    duration VARCHAR(50),
+    fees FLOAT
+);
 
----
-
-### 📁 `com.gqt.cms.users`
-#### `Professor.java`
-- A simple model class to store:
-  - Professor name
-  - ID
-  - Assigned course ID
-
-#### `Student.java`
-- A model class to store:
-  - Student name
-  - ID
-  - Enrolled course ID
+CREATE TABLE enrollments (
+    sid INT,
+    cid INT,
+    PRIMARY KEY (sid, cid),
+    FOREIGN KEY (sid) REFERENCES students(sid),
+    FOREIGN KEY (cid) REFERENCES courses(cid)
+);
+```
 
 ---
 
-### 📁 `com.gqt.cms.utils`
-#### `DialogUtil.java`
-- Helper class for displaying basic `JOptionPane` input dialogs.
+## 🖼 GUI Preview Features
 
-#### `MultiInputDialogUtil.java`
-- Builds multi-field input dialogs using:
-  - `JPanel`
-  - `JLabel`
-  - `JTextField`
-- Used for clean registration forms (e.g., name + ID together)
-
----
-
-## 🔄 System Flow
-
-1. **Launch `Launcher.java`**
-2. `MainWindow` opens with role selection (Admin / Professor / Student)
-3. Each role opens their respective GUI window (`AdminWindow`, `ProfessorWindow`, `StudentWindow`)
-4. All data is stored using static arrays defined in the `datamanagement` module
-
----
-
-## ✅ Highlights
-
-- 💻 Fully GUI-based using Java Swing
-- 🧼 Clean and modular code structure
-- 📦 Array-based in-memory data management
-- 🧩 Reusable dialog utilities
-- 🚫 No database required (great for beginners)
+- ✅ Consistent color palette across windows (`AliceBlue`, `SteelBlue`)
+- 🧩 `JComboBox` used for selecting courses
+- 📊 `JTable` for displaying course lists in a readable format
+- 🎯 `GridBagLayout` for flexible, organized form design
 
 ---
 
 ## 🚀 How to Run
 
-1. Clone or download this repository.
-2. Open the project in your favorite Java IDE (e.g., Eclipse or IntelliJ).
-3. Run the `Launcher.java` file.
-4. Interact with the GUI to perform admin, professor, or student operations.
+1. Clone or download the repo.
+2. Set up MySQL with the given table structure.
+3. Configure DB credentials in `CourseDatabase.java`.
+4. Run `Launcher.java` to start the application.
+5. Navigate using the role-based dashboard.
 
 ---
 
-## 📈 Future Enhancements
+## 📌 Future Plans
 
-- Add file-based storage or database for data persistence
-- Implement user login/authentication for each role
-- Add input validation and duplicate checks
-- Improve GUI design using advanced Swing components/layouts
+- 🛡️ Login system for each role
+- 🧾 Validation: duplicate emails, course constraints
+- 📈 Professor reports
+- 📤 Export data to CSV
 
 ---
 
 ## 👨‍💻 Author
 
 **Harsha Naidu**  
-📧 Email: [HARSHA-3623@github.com](https://github.com/HARSHA-3623)  
-🎓 Java Developer | Swing UI Designer | Backend Enthusiast
-
----
+📧 [HARSHA-3623@github.com](https://github.com/HARSHA-3623)  
+☕ Java Swing Developer | Backend & JDBC Enthusiast

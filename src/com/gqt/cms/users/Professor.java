@@ -1,10 +1,19 @@
-// File: com/gqt/cms/users/Professor.java
 package com.gqt.cms.users;
 
-import com.gqt.cms.gui.ProfessorWindow;
-
 public class Professor {
-    public void professorOperations() {
-        new ProfessorWindow();
-    }
+	private String name;
+	private String email;
+
+	public Professor(String name, String email) {
+		this.name = name;
+		this.email = email;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public String getEmail() {
+		return email;
+	}
 }
